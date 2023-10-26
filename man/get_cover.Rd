@@ -10,7 +10,7 @@ get the cover
 }
 
 \usage{
-get_cover(regions, sample, env=NULL, adjust=TRUE)
+get_cover(regions, sample, env=NULL, adjust=TRUE, minssize=10)
 }
 
 \arguments{
@@ -18,6 +18,7 @@ get_cover(regions, sample, env=NULL, adjust=TRUE)
 \item{sample}{??}
 \item{env}{SpatRaster with environmental data or NULL}
 \item{adjust}{logical. If \code{TRUE} then the cover is used?}
+\item{minssize}{numeric}
 }
 
 \value{

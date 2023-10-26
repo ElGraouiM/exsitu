@@ -54,13 +54,13 @@ branch_length <- function(tree, samp, adjust, adjfun=log10 ) {
 }
 
 
-ssize_adj <- function(ssize, score) {
+small_ssize_penalty <- function(ssize, score, minssize=10) {
 # linear, make curvilinear
-	ifelse(ssize > 10, score, score * ssize / 10)
+	ifelse(ssize > minssize, score, score * ssize / minssize)
 }
 
 
-get_cover <- function(regions, sample, env=NULL, adjust=TRUE) {
+get_cover <- function(regions, sample, env=NULL, adjust=TRUE, minssize=10) {
 
 ## TODO  RH
 # fix the adjust effect such that when you have many observations in one zones
@@ -95,7 +95,7 @@ get_cover <- function(regions, sample, env=NULL, adjust=TRUE) {
 	potential_pd <- branch_length(x, 1:nrow(regions), adjust=adjust)
 	score <- min(1, actual_pd/potential_pd)
 	
-	ssize_adj(length(sample), score)
+	small_ssize_penalty(length(sample), score, minssize)
 	
 }
 
