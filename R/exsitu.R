@@ -7,6 +7,8 @@ get_samplesize <- function(range, fun=n_zones, ...) {
 	if (inherits(range, "SpatRaster")) {
 		range <- terra::as.polygons(range)
 		range <- range[range[,1,drop=TRUE]==1]
+	} else if (!inherits(range, "SpatVector")) {
+		stop("range should be a SpatVector")
 	}
 	a <- terra::expanse(range, unit="km")
 	n <- fun(a, ...)
@@ -66,6 +68,8 @@ get_cover <- function(regions, sample, env=NULL, adjust=TRUE, minssize=10) {
 # fix the adjust effect such that when you have many observations in one zones
 # they can only contribute to their neighbors. Do not increase branch length to avoid that
 # one region does not compensate for another
+
+	stopifnot(minssize > 0)
 		
 	if (nrow(regions) == 1) {
 		# cannot make a tree 
