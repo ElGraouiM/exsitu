@@ -23,6 +23,9 @@ branch_length <- function(tree, samp, adjust, adjfun=log10 ) {
 	if (adjust) {
 		tab <- table(samp)
 		tab <- adjfun(tab) + 1
+		# or? 
+		# tab <- pmax(1, adjfun(tab))
+
 	}
 	sample <- as.character(unique(samp))
     if (is.null(tree$edge.length)) {stop("Tree has no branch lengths, cannot compute pd") }
@@ -31,6 +34,7 @@ branch_length <- function(tree, samp, adjust, adjfun=log10 ) {
     if (length(sample) == 0) {
         GD <- 0
     } else if (length(sample) == 1) {
+		# also adjust for sample size
         GD <- max(tree$edge.length)
     } else if (length(absent) == 0) {
 		if (adjust) {
@@ -50,12 +54,24 @@ branch_length <- function(tree, samp, adjust, adjfun=log10 ) {
 }
 
 
+ssize_adj <- function(ssize, score) {
+# linear, make curvilinear
+	ifelse(ssize > 10, score, score * ssize / 10)
+}
+
+
 get_cover <- function(regions, sample, env=NULL, adjust=TRUE) {
 
 ## TODO  RH
 # fix the adjust effect such that when you have many observations in one zones
 # they can only contribute to their neighbors. Do not increase branch length to avoid that
 # one region does not compensate for another
+		
+	if (nrow(regions) == 1) {
+		# cannot make a tree 
+
+		return(99)
+	}
 		
 	xy <- terra::centroids(regions)
 	if (!is.null(env)) {
@@ -77,7 +93,10 @@ get_cover <- function(regions, sample, env=NULL, adjust=TRUE) {
 
 	actual_pd <- branch_length(x, s[,2], adjust=adjust)	
 	potential_pd <- branch_length(x, 1:nrow(regions), adjust=adjust)
-	min(1, actual_pd/potential_pd)
+	score <- min(1, actual_pd/potential_pd)
+	
+	ssize_adj(length(sample), score)
+	
 }
 
 
