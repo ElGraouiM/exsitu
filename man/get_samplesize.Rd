@@ -10,14 +10,13 @@ get the branch length
 }
 
 \usage{
-get_samplesize(range, fun, nmin=10, minsize=10000)
+get_samplesize(range, fun=n_zones, ...)
 }
 
 \arguments{
-\item{range}{Spat?}
-\item{fun}{function}
-\item{nmin}{positive integer}
-\item{minsize}{positive integer}
+\item{range}{SpatVector or SpatRaster}
+\item{fun}{function that computes the number of zones. The default is \code{\link{n_zones}}}
+\item{...}{additional arguments for \code{fun}}
 }
 
 \value{

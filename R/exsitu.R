@@ -1,14 +1,18 @@
 
-get_samplesize <- function(range, fun, nmin=10, minsize=10000) {
+n_zones <- function(x, min_area, m=3) {
+	round(pmax(1, pmin(x, m*sqrt(x))))
+}
+
+get_samplesize <- function(range, fun=n_zones, ...) {
 	if (inherits(range, "SpatRaster")) {
 		range <- terra::as.polygons(range)
 		range <- range[range[,1,drop=TRUE]==1]
 	}
 	a <- terra::expanse(range, unit="km")
-	n <- round(fun(a))
-	n <- max(nmin, n)
-	z <- max(1, min(n, round(a/minsize)))
-	return(list(range=range, area=a, n=n, nzones=z))
+	n <- fun(a, ...)
+	#n <- max(nmin, n)
+	#z <- max(1, min(n, round(a/min_area)))
+	return(list(range=range, area=a, n=n))
 }
 
 
