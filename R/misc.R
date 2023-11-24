@@ -18,3 +18,13 @@ remove_small <- function(range_adj, intr, d) {
   intr
 }
 
+
+adjust_range <- function(x, sp, th, CAmin=100000, CAmax=250000) { 
+	r <- x > th
+	ca_add <- terra::buffer(sp, CAmin) |> terra::aggregate()
+	ca_remove <- terra::buffer(sp, CAmax) |> terra::aggregate()
+	m <- terra::mask(r, ca_remove, updatevalue=FALSE)
+	r <- (m + r) > 1
+	terra::rasterize(ca100, r, update=TRUE)
+}
+
