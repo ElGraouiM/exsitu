@@ -1,14 +1,25 @@
 
-GRSex <- function(srange, ca) {
-	bufr <- terra::mask(srange, ca)
-	e <- terra::expanse(c(srange, bufr))
-	e[2,2] / e[1,2]
+
+GRSex <- function(srange, ca, inrange) {
+	if (inrange) {
+		bufr <- terra::mask(srange, ca)
+		e <- terra::expanse(c(srange, bufr))
+		e[2,2] / e[1,2]
+	} else {
+		bufr <- terra::expanse(ca)
+		e <- terra::expanse(srange)
+		bufr / e	
+	}
 }
 
-ERSex <- function(srange, ca, ecoregions) {
+ERSex <- function(srange, ca, ecoregions, inrange) {
 	eco <- terra::mask(ecoregions, srange) 
 	ueco <- nrow(terra::unique(eco))
-	seedeco <- terra::mask(eco, ca)
+	if (inrange) {
+		seedeco <- terra::mask(eco, ca)
+	} else {
+		seedeco <- terra::mask(ecoregions, ca)	
+	}
 	seco <- nrow(terra::unique(seedeco))
 	if(is.null(seco)) return(0)
 	seco / ueco
@@ -19,12 +30,12 @@ SRSex <- function(s, h) {
 	s / (h + s)
 }
 
-FCSex <- function(seeds, herbarium, srange, ecoregions, bsize=50000) {
+FCSex <- function(seeds, herbarium, srange, ecoregions, bsize=50000, inrange=TRUE) {
 	srange <- terra::subst(srange, 0, NA)
 	ca <- terra::buffer(seeds, bsize) |> terra::aggregate()  
 	ca <- terra::rasterize(ca, srange)
-	g <- GRSex(srange, ca)
-	e <- ERSex(srange, ca, ecoregions)
+	g <- GRSex(srange, ca, inrange)
+	e <- ERSex(srange, ca, ecoregions, inrange)
 	nseed <- nrow(seeds)
 	nherb <- NROW(herbarium)
 	s <- SRSex(nseed, nherb)
