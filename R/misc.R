@@ -25,6 +25,6 @@ adjust_range <- function(x, sp, th, CAmin=100000, CAmax=250000) {
 	ca_remove <- terra::buffer(sp, CAmax) |> terra::aggregate()
 	m <- terra::mask(r, ca_remove, updatevalue=FALSE)
 	r <- (m + r) > 1
-	terra::rasterize(ca100, r, update=TRUE)
+	terra::rasterize(ca_add, r, update=TRUE)
 }
 

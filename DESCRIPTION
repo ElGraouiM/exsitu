@@ -1,15 +1,14 @@
 Package: exsitu
 Type: Package
-Title: Ex-Situ conservation gap analysis
-Version: 0.0-2
-Date: 2023-10-26
+Title: Ex-Situ conservation status for plants
+Version: 0.0-3
+Date: 2023-11-24
 Imports: ape, terra
-Maintainer: Marwa El Graoui <r.hijmans@gmail.com>
-Author: Marwa El Graoui <r.hijmans@gmail.com>
-Description: What the package does (one paragraph).
+Description: Ex-Situ conservation status for plants. FCS by Khoury et al. And CVS by El Graoui et al.
 Encoding: UTF-8
 License: GPL (>=3)
-BugReports: https://github.com/rspatial/terra/issues/
+Depends: R (>= 4.0.0)
+BugReports: https://github.com/reagro/exsitu/issues
 LazyLoad: yes
 Authors@R: c(
 	person("Marwa", "El Graoui", role = c("cre", "aut"),  
