@@ -17,10 +17,11 @@ remove_small <- function(range_adj, intr, d) {
 }
 
 
-adjust_range <- function(x, sp, CAmin=50000, CAmax=250000) { 
+adjust_range <- function(x, sp, land, CAmin=50000, CAmax=250000) { 
 	ca_add <- terra::buffer(sp, CAmin) |> terra::aggregate()
 	ca_remove <- terra::buffer(sp, CAmax) |> terra::aggregate()
 	x <- terra::mask(x, ca_remove, updatevalue=NA)
-	terra::rasterize(ca_add, x, update=TRUE)
+	x <- terra::rasterize(ca_add, x, update=TRUE)
+	terra::mask(x, land)
 }
 
