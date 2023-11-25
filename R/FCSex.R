@@ -1,14 +1,18 @@
+#In GapAnalysis::GRSex the CA50 areas outside of the SDM range are considered for the genebank area and in GapAnalysis::ERSex the number of ecoregions considered for the genebank samples includes areas that are outside the SDM. 
+# In both cases you could end up with a score > 1. That can be corrected for, but this is inconsistent. Areas outside the range (SDM) should not be included in the analysis.
+# They are not included in the analysis below (but can be with "inrange=FALSE").
 
 
 GRSex <- function(srange, ca, inrange) {
 	if (inrange) {
 		bufr <- terra::mask(srange, ca)
-		e <- terra::expanse(c(srange, bufr))
+		e <- terra::expanse(c(srange, bufr), unit="km")
 		e[2,2] / e[1,2]
 	} else {
-		bufr <- terra::expanse(ca)
-		e <- terra::expanse(srange)
-		bufr / e	
+		bufr <- terra::expanse(ca, unit="km")
+		e <- terra::expanse(srange, unit="km")
+		bufr / e[1,2]
+		#min(1, bufr / e)
 	}
 }
 
@@ -23,6 +27,7 @@ ERSex <- function(srange, ca, ecoregions, inrange) {
 	seco <- nrow(terra::unique(seedeco))
 	if(is.null(seco)) return(0)
 	seco / ueco
+	#min(1, seco / ueco)
 }
 
 SRSex <- function(s, h) {
