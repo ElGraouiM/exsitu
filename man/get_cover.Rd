@@ -1,21 +1,21 @@
-\name{get_cover}
+\name{ex_cvs}
 
-\alias{get_cover}
+\alias{ex_cvs}
 
   
-\title{get cover}
+\title{ex-situ conservation score}
 
 \description{
-get the cover
+get the ex-situ conservation score for a taxon
 }
 
 \usage{
-get_cover(regions, sample, env=NULL, adjust=TRUE, minssize=10)
+ex_cvs(regions, sample, env=NULL, adjust=TRUE, minssize=10)
 }
 
 \arguments{
-\item{regions}{??}
-\item{sample}{??}
+\item{regions}{SpatVector of polygons}
+\item{sample}{SpatVector of points}
 \item{env}{SpatRaster with environmental data or NULL}
 \item{adjust}{logical. If \code{TRUE} then the cover is used?}
 \item{minssize}{numeric}
