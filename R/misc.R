@@ -1,7 +1,6 @@
 
-remove_small <- function(range_adj, intr, d) {
+remove_small <- function(intr, d) {
 
-	a <- terra::expanse(range_adj, unit="km")
 	intr <- terra::disagg(intr)
 	intr$area <- terra::expanse(intr, unit="km")
 	x <- intr[intr$area> d,]

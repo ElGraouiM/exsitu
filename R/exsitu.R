@@ -62,7 +62,7 @@ small_ssize_penalty <- function(ssize, score, minssize=10) {
 }
 
 
-get_cover <- function(regions, sample, env=NULL, adjust=TRUE, minssize=10) {
+ex_cvs <- function(regions, sample, env=NULL, adjust=TRUE, minssize=10) {
 
 ## TODO  RH
 # fix the adjust effect such that when you have many observations in one zones
@@ -73,8 +73,12 @@ get_cover <- function(regions, sample, env=NULL, adjust=TRUE, minssize=10) {
 		
 	if (nrow(regions) == 1) {
 		# cannot make a tree 
-
-		return(99)
+		s <- terra::extract(regions, sample)
+		if (length(na.omit(terra::extract(regions, s)[,2])) > 1) { 
+			return(1)
+		} else {
+			return(0)		
+		}
 	}
 		
 	xy <- terra::centroids(regions)

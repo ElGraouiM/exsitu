@@ -3,7 +3,7 @@
 # They are not included in the analysis below (but can be with "inrange=FALSE").
 
 
-GRSex <- function(srange, ca, inrange) {
+GRex <- function(srange, ca, inrange) {
 	if (inrange) {
 		bufr <- terra::mask(srange, ca)
 		e <- terra::expanse(c(srange, bufr), unit="km")
@@ -11,12 +11,12 @@ GRSex <- function(srange, ca, inrange) {
 	} else {
 		bufr <- terra::expanse(ca, unit="km")
 		e <- terra::expanse(srange, unit="km")
-		bufr / e[1,2]
-		#min(1, bufr / e)
+		out <- bufr[1,2] / e[1,2]
+		min(1, out)
 	}
 }
 
-ERSex <- function(srange, ca, ecoregions, inrange) {
+ERex <- function(srange, ca, ecoregions, inrange) {
 	eco <- terra::mask(ecoregions, srange) 
 	ueco <- nrow(terra::unique(eco))
 	if (inrange) {
@@ -25,25 +25,29 @@ ERSex <- function(srange, ca, ecoregions, inrange) {
 		seedeco <- terra::mask(ecoregions, ca)	
 	}
 	seco <- nrow(terra::unique(seedeco))
-	if(is.null(seco)) return(0)
-	seco / ueco
-	#min(1, seco / ueco)
+	if (is.null(seco)) return(0)
+	out <- seco / ueco
+	if (inrange) {
+		out 
+	} else {
+		min(1, out)
+	}
 }
 
-SRSex <- function(s, h) {
+SRex <- function(s, h) {
 	if (s == 0) return(0)
 	s / (h + s)
 }
 
-FCSex <- function(seeds, herbarium, srange, ecoregions, bsize=50000, inrange=TRUE) {
+FCex <- function(seeds, herbarium, srange, ecoregions, bsize=50000, inrange=TRUE) {
 	srange <- terra::subst(srange, 0, NA)
 	ca <- terra::buffer(seeds, bsize) |> terra::aggregate()  
 	ca <- terra::rasterize(ca, srange)
-	g <- GRSex(srange, ca, inrange)
-	e <- ERSex(srange, ca, ecoregions, inrange)
+	g <- GRex(srange, ca, inrange)
+	e <- ERex(srange, ca, ecoregions, inrange)
 	nseed <- nrow(seeds)
 	nherb <- NROW(herbarium)
-	s <- SRSex(nseed, nherb)
-	c(nseed=nseed, nherb=nherb, GRSex=g, ERSex=e, SRSex=s, FCS=mean(c(g, e, s)))
+	s <- SRex(nseed, nherb)
+	c(nseed=nseed, nherb=nherb, GRex=g, ERex=e, SRex=s, FCex=mean(c(g, e, s)))
 }
 
