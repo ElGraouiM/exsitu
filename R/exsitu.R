@@ -112,9 +112,20 @@ ex_cvs_old <- function(regions, sample, env=NULL, adjust=FALSE, minssize=10) {
 }
 
 
+EnvDist <- function(env, regions, envfun) {
+	e <- terra::extract(env, regions, fun=mean, na.rm=TRUE, ID=FALSE)
+	ed1 <- dist(e[,1])
+	ed2 <- dist(e[,2])	
+	ed <- data.frame(ed1, ed2)
+	names(ed) <- names(env)
+	# express environmental distance expressed as geographic distance
+	envd <- envfun(ed)
+	structure(envd, class = 'dist', Size=attr(ed1, "Size"))
+}
 
 
-ex_cvs <- function(regions, sample, env=NULL, envfun=NULL, adjust=FALSE, minssize=10) {
+
+ex_cvs <- function(regions, sample, env=NULL, envfun=NULL, clustmethod="complete", adjust=FALSE, minssize=10) {
 
 ## TODO  RH
 # fix the adjust effect such that when you have many observations in one zones
@@ -135,21 +146,14 @@ ex_cvs <- function(regions, sample, env=NULL, envfun=NULL, adjust=FALSE, minssiz
 	xy <- terra::centroids(regions)
 	d <- terra::distance(xy, unit="km")
 	if (!is.null(env)) {
-		e <- terra::extract(env, regions, fun=mean, na.rm=TRUE, ID=FALSE)
-		ed1 <- dist(e[,1])
-		ed2 <- dist(e[,2])	
-		ed <- data.frame(ed1, ed2)
-		names(ed) <- names(env)
-		# express environmental distance expressed as geographic distance
-		envd <- envfun(ed)
-		envd <- structure(envd, class = 'dist', Size=attr(ed1, "Size"))
+		envd <- EnvDist(env, regions, envfun)
 		# env dist cannot be smaller than geo dist
 		envd[envd < d] <- d[envd < d]
 		# mean of geo and env dist
 		d <- (d + envd) / 2
 	} 
 
-	x <- stats::hclust(d)
+	x <- stats::hclust(d, method=clustmethod)
 	x <- ape::as.phylo(x)
 	terra::values(regions) <- NULL
 	
@@ -167,3 +171,69 @@ ex_cvs <- function(regions, sample, env=NULL, envfun=NULL, adjust=FALSE, minssiz
 }
 
 
+
+ex_net <- function(regions, sample, env=NULL, envfun=NULL, adjust=FALSE, minssize=10) {
+
+## TODO  RH
+# fix the adjust effect such that when you have many observations in one zones
+# they can only contribute to their neighbors. Do not increase branch length to avoid that
+# one region does not compensate for another
+
+	stopifnot(minssize > 0)
+
+	if (nrow(sample) <= 0) {
+		return(0)
+	}
+		
+	x <- terra::centroids(regions)
+	x <- round(x, 5)  # to help merge
+
+## make graph of delauny edges 
+	d <- terra::disagg(terra::as.lines(terra::delaunay(x)), TRUE)
+	g <- terra::geom(d)[, c(1, 3:4)]
+	p <- terra::geom(x)[, c(1, 3:4)]
+	colnames(p)[1] <- "att"
+	m <- merge(g, p)
+	m <- m[order(m$geom), ]
+
+	rr <- data.frame(
+		from = m$att[seq(1, nrow(m), 2)],
+		to = m$att[seq(2, nrow(m), 2)]
+	)
+	rr[,1:2] <- apply(rr[,1:2], 1, sort) |> t()
+	rr <- rr[order(rr[,1], rr[,2]), ] |> unique()
+
+	rr <- cbind(rr, w=1, dst=terra::distance(x[rr[,1], ], x[rr[,2], ], pairwise=TRUE, unit="m")/1000)
+
+	if (!is.null(env)) {
+		envd <- as.matrix(EnvDist(env, regions, envfun))
+		rr$envdst <- envd[as.matrix(rr[,1:2])]
+		rr$geodst <- rr$dst
+		# sum geo and env dist
+		rr$dst <- rr$dst + rr$envdst
+	} 
+	
+	g <- igraph::graph_from_data_frame(rr, directed = FALSE)
+	igraph::E(g)$weight <- rr$dst * rr$w
+	dst <- igraph::distances(g)
+	d1 <- sum(dst)
+
+	y <- unique(terra::extract(regions, sample)[,2])
+
+	rr$w <- rowSums(!matrix(as.matrix(rr[,1:2]) %in% y, ncol=2)) / 2
+	igraph::E(g)$weight <- rr$dst * rr$w
+
+	if (length(y) > 1) {
+		b <- combn(as.character(y), 2)
+		for (i in 1:ncol(b)) {
+			if (!igraph::are_adjacent(g, b[1,i], b[2,i])) {
+				g <- igraph::add_edges(g, b[,i], weight=0)
+			}
+		}
+	}
+	d2 <- igraph::distances(g)
+	score <- 1 - (sum(d2) / d1)
+
+	small_ssize_penalty(length(sample), score, minssize)
+
+}
